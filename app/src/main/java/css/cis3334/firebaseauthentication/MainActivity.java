@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Declare all instances
     private TextView textViewStatus;
     private EditText editTextEmail;
     private EditText editTextPassword;
@@ -28,68 +29,92 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonSignOut;
     private FirebaseAuth mAuth;
 
+    /**
+     * Bundle method to save the state of the of the application.
+     * Can be used to reload the previous state.
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Text views
         textViewStatus = (TextView) findViewById(R.id.textViewStatus);
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextPassword = (EditText) findViewById(R.id.editTextPassword);
+
+        // Buttons
         buttonLogin = (Button) findViewById(R.id.buttonLogin);
         buttonGoogleLogin = (Button) findViewById(R.id.buttonGoogleLogin);
         buttonCreateLogin = (Button) findViewById(R.id.buttonCreateLogin);
         buttonSignOut = (Button) findViewById(R.id.buttonSignOut);
+
+        // Initialize FirebaseAuth instance.
         mAuth = FirebaseAuth.getInstance();
 
+        // Calls signIn method to sign in existing user.
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "normal login ");
                 signIn(editTextEmail.getText().toString(), editTextPassword.getText().toString());
             }
         });
 
+        // Calls createAccount method to create new user and sign them in. Passes information to DB to create new user.
         buttonCreateLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Create Account ");
                 createAccount(editTextEmail.getText().toString(), editTextPassword.getText().toString());
             }
         });
 
+        // Calls googleSignIn method to log in using Google info.
+        // Currently not being used.
         buttonGoogleLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Google login ");
                 googleSignIn();
             }
         });
 
+        // Calls signOut method to sign the user out.
         buttonSignOut.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Logging out - signOut ");
                 signOut();
             }
         });
     }
 
+    /**
+     * Checks to see if user is currently authenticated before starting screen appears.
+     *
+     * NOTE: Removed log calls that logged signed in and signed out to the log file
+     * Removed Toast calls that provided simple feedback about the operation.
+     */
     @Override
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        //updateUI(currentUser);
+
         if (currentUser != null) {
-            // User is signed in
-            Log.d("CIS3334", "onAuthStateChanged:signed_in:" + currentUser.getUid());
-            Toast.makeText(MainActivity.this, "User Signed In", Toast.LENGTH_LONG).show();
-            textViewStatus.setText("Signed In");
+            // Text displayed when user is signed in successfully
+            textViewStatus.setText("Welcome! You are now Signed In.");
         } else {
-            // User is signed out
-            Log.d("CIS3334", "onAuthStateChanged:signed_out");
-            Toast.makeText(MainActivity.this, "User Signed Out", Toast.LENGTH_LONG).show();
-            textViewStatus.setText("Signed Out");
+            // Text displayed when user is signed out successfully
+            textViewStatus.setText("You are Signed Out");
         }
     }
 
+    /**
+     * Method to create a new user with email address and password
+     * Takes in email address and password, validates them, and creates new user
+     *
+     * NOTE: Removed log calls that logged signed in and signed out to the log file
+     * Removed Toast calls that provided simple feedback about the operation.
+     *
+     * @param email
+     * @param password
+     */
     private void createAccount(String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -97,15 +122,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            Log.d("CIS3334", "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            textViewStatus.setText("Signed In");
+                            textViewStatus.setText("Welcome! You are now Signed In.");
                         } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w("CIS3334", "createUserWithEmail:failure", task.getException());
-                            Toast.makeText(MainActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            textViewStatus.setText("Signed Out");
+                            // If sign in fails, update UI with a message to the user.
+                            textViewStatus.setText("Please try again.");
                         }
 
                         // ...
@@ -113,6 +134,16 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Method to sign in new users with existing email address and password stored in DB.
+     * Takes in email address and password, validates them against the DB, and signs the user in.
+     *
+     * NOTE: Removed log calls that logged signed in and signed out to the log file
+     * Removed Toast calls that provided simple feedback about the operation.
+     *
+     * @param email
+     * @param password
+     */
     private void signIn(String email, String password){
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -120,15 +151,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            Log.d("CIS3334", "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            textViewStatus.setText("Signed In");
+                            textViewStatus.setText("Welcome! You are now Signed In.");
                         } else {
                             // If sign in fails, display a message to the user.
-                            Log.w("CIS3334", "singInWithEmail:failure", task.getException());
-                            Toast.makeText(MainActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            textViewStatus.setText("Signed Out");
+                            textViewStatus.setText("Please try again.");
                         }
 
                         // ...
@@ -136,11 +163,19 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Method to sign user out of app.
+     */
     private void signOut () {
         mAuth.signOut();
-        textViewStatus.setText("Signed Out");
+        textViewStatus.setText("You are now Signed Out. Good-bye!");
     }
 
+    /**
+     * Method to use Google information to sign in.
+     *
+     * NOTE: Currently not set up.
+     */
     private void googleSignIn() {
 
     }
